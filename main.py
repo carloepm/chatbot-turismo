@@ -5,6 +5,15 @@ from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
 from pathlib import Path
+# --- TRUCO PARA RENDER Y CHROMADB ---
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+# ------------------------------------
+
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+# ... (aquí sigue el resto de tu código normal)
 
 # Importaciones de LangChain
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings

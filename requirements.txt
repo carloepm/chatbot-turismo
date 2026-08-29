@@ -9,3 +9,4 @@ unstructured
 docx2txt
 msoffcrypto-tool
 marked
+pysqlite3-binary
