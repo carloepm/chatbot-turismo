@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turismo Chilecito - Asistente Virtual</title>
+    <style>
+        /* Ahora el body simula ser tu página web normal con imagen de fondo */
+        body { 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            margin: 0; 
+            background-color: #cfd8dc; /* Color por si la imagen tarda en cargar */
+            
+            /* --- NUEVO CÓDIGO PARA EL FONDO DE LA PÁGINA --- */
+            background-image: url('/static/fondopagina.jpg');
+            background-size: cover; /* Cubre toda la pantalla */
+            background-position: center; /* Centra la imagen */
+            background-attachment: fixed; /* Hace que el fondo se quede quieto al hacer scroll */
+            background-repeat: no-repeat;
+            /* ----------------------------------------------- */
+            
+            height: 200vh; /* Para que puedas hacer scroll y ver que el chat "flota" */
+        }
+
+        /* ------------------------------------------- */
+        /* 1. EL BOTÓN FLOTANTE (MINIMIZADO)           */
+        /* ------------------------------------------- */
+        #chat-fab {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;  /* ANTES: 65px - Ahora es más pequeño */
+            height: 50px; /* ANTES: 65px - Ahora es más pequeño */
+            background-color: #2e7d32;
+            border-radius: 50%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 1000;
+            transition: transform 0.2s;
+        }
+
+        #chat-fab:hover { transform: scale(1.05); }
+
+        #chat-fab img { 
+            width: 35px; 
+            height: 35px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            background-color: white; 
+            padding: 2px;
+        }
+
+        /* El mensajito "Aquí está tu asistente" */
+        #chat-fab .tooltip {
+            position: absolute;
+            right: 80px; /* Lo empuja hacia la izquierda del botón */
+            background-color: white;
+            color: #333;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            white-space: nowrap;
+            font-weight: bold;
+        }
+
+        /* El triangulito del cartel */
+        #chat-fab .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -6px;
+            margin-top: -6px;
+            border-width: 6px 0 6px 6px;
+            border-style: solid;
+            border-color: transparent transparent transparent white;
+        }
+
+
+        /* ------------------------------------------- */
+        /* 2. EL CONTENEDOR DEL CHAT (VENTANA ABIERTA) */
+        /* ------------------------------------------- */
+        #app-container {
+            position: fixed;
+            bottom: 30px; 
+            right: 30px;
+            width: 350px; /* Un poco más angosto para ser widget */
+            height: 550px;
+            max-height: 80vh;
+            background: #ffffff; 
+            display: none; /* OCULTO POR DEFECTO */
+            flex-direction: column; 
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+            z-index: 1001;
+            /* Animación suave al abrir */
+            animation: aparecer 0.3s ease-out;
+        }
+
+        @keyframes aparecer {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #encabezado {
+            background-color: #2e7d32; 
+            color: white; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; /* Separa el logo/título del botón X */
+            padding: 15px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        .encabezado-izq {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600; 
+            font-size: 1.1rem;
+        }
+
+        #logo-app {
+            height: 35px; width: 35px; object-fit: cover; border-radius: 50%; background-color: white; padding: 2px; 
+        }
+
+        /* Botón para cerrar la ventana */
+        #btn-cerrar {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        #btn-cerrar:hover { color: #cfd8dc; }
+
+        /* Área de mensajes (con tu fondo) */
+        #mensajes {
+            flex: 1; 
+            padding: 20px; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px;
+            background-color: #eceff1;
+            background-image: url('/static/fondo.png'); /* Tu imagen de fondo */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            scroll-behavior: smooth;
+        }
+
+        .burbuja {
+            padding: 12px 16px; border-radius: 18px; max-width: 80%; font-size: 0.95rem; line-height: 1.4; word-wrap: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .burbuja.ia { background-color: #ffffff; color: #333333; align-self: flex-start; border-bottom-left-radius: 4px; }
+        .burbuja.yo { background-color: #388e3c; color: #ffffff; align-self: flex-end; border-bottom-right-radius: 4px; }
+
+        #controles { display: flex; padding: 15px; background-color: #ffffff; border-top: 1px solid #e0e0e0; gap: 10px; }
+        #input-texto { flex: 1; padding: 12px 18px; border: 1px solid #cfd8dc; border-radius: 25px; outline: none; font-size: 0.95rem; transition: border-color 0.3s; }
+        #input-texto:focus { border-color: #2e7d32; }
+        #boton-enviar { background-color: #2e7d32; color: white; border: none; padding: 0 20px; border-radius: 25px; cursor: pointer; font-weight: bold; transition: background-color 0.2s; }
+        #boton-enviar:hover { background-color: #1b5e20; }
+        #mensajes::-webkit-scrollbar { width: 6px; }
+        #mensajes::-webkit-scrollbar-track { background: transparent; }
+        #mensajes::-webkit-scrollbar-thumb { background-color: #b0bec5; border-radius: 10px; }
+        /* Ajustes para el texto traducido por marked.js */
+        .burbuja p { margin: 0 0 10px 0; }
+        .burbuja p:last-child { margin-bottom: 0; }
+        .burbuja ul, .burbuja ol { margin: 0; padding-left: 20px; }
+    </style>
+    <!-- Librería para traducir Markdown a HTML -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+</head>
+<body>
+
+    <!-- EL BOTÓN MINIMIZADO -->
+    <div id="chat-fab" onclick="toggleChat()">
+        <img src="/static/logo.png" alt="Logo">
+        <span class="tooltip">¡Aquí está tu asistente!</span>
+    </div>
+
+    <!-- LA VENTANA DEL CHAT -->
+    <div id="app-container">
+        <div id="encabezado">
+            <div class="encabezado-izq">
+                <img id="logo-app" src="/static/logo.png" alt="Logo Turismo">
+                <span>Guía de Chilecito</span>
+            </div>
+            <!-- Botón X para cerrar -->
+            <button id="btn-cerrar" onclick="toggleChat()">✖</button>
+        </div>
+        
+        <div id="mensajes">
+            <div class="burbuja ia">¡Hola! Soy tu asistente turístico virtual. ¿Qué te gustaría conocer de nuestra ciudad hoy?</div>
+        </div>
+        
+        <div id="controles">
+            <input type="text" id="input-texto" placeholder="Escribe un mensaje..." onkeypress="manejarEnter(event)">
+            <button id="boton-enviar" onclick="enviar()">Enviar</button>
+        </div>
+    </div>
+
+    <script>
+        const idSesionUnico = "turista_" + Math.random().toString(36).substring(2, 10);
+
+        // FUNCIÓN NUEVA: Alterna entre mostrar el botón o mostrar el chat
+        function toggleChat() {
+            const ventanaChat = document.getElementById('app-container');
+            const botonFlotante = document.getElementById('chat-fab');
+
+            if (ventanaChat.style.display === "none" || ventanaChat.style.display === "") {
+                // Abrir chat
+                ventanaChat.style.display = "flex";
+                botonFlotante.style.display = "none";
+            } else {
+                // Cerrar chat
+                ventanaChat.style.display = "none";
+                botonFlotante.style.display = "flex";
+            }
+        }
+
+        // Lógica de envío de mensajes (Se mantiene igual)
+        function manejarEnter(event) {
+            if (event.key === "Enter") enviar();
+        }
+
+        async function enviar() {
+            let input = document.getElementById("input-texto");
+            let mensajes = document.getElementById("mensajes");
+            let boton = document.getElementById("boton-enviar");
+            let texto = input.value;
+
+            if (texto.trim() === "") return;
+
+            mensajes.innerHTML += `<div class="burbuja yo">${texto}</div>`;
+            input.value = ""; 
+            mensajes.scrollTop = mensajes.scrollHeight; 
+
+            input.disabled = true;
+            boton.disabled = true;
+
+            const idPensando = "pensando-" + Date.now();
+            mensajes.innerHTML += `<div id="${idPensando}" class="burbuja ia" style="color: #888; font-style: italic;">Escribiendo...</div>`;
+            mensajes.scrollTop = mensajes.scrollHeight;
+
+            try {
+                let respuesta = await fetch("/api/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ texto: texto, id_sesion: idSesionUnico })
+                });
+
+                let datos = await respuesta.json();
+                document.getElementById(idPensando).remove();
+                
+                let textoFormateado = marked.parse(datos.respuesta_ia);
+                mensajes.innerHTML += `<div class="burbuja ia">${textoFormateado}</div>`;
+                
+            } catch (e) {
+                document.getElementById(idPensando).remove();
+                mensajes.innerHTML += `<div class="burbuja ia" style="color:#d32f2f;">Hubo un error de conexión.</div>`;
+            }
+
+            input.disabled = false;
+            boton.disabled = false;
+            input.focus();
+            mensajes.scrollTop = mensajes.scrollHeight;
+        }
+    </script>
+</body>
+</html>

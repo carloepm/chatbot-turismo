@@ -1,0 +1,12 @@
+1.prender bot
+uvicorn main:app --reload
+
+2.link pagina local
+http://localhost:8000
+
+3. base de datos
+actualizar base de datos, iniciar nuevamente
+python base_datos.py
+
+4. modelo ia
+gemini-3.5-flash
