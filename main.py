@@ -55,7 +55,7 @@ if not ARCHIVO_CSV.exists():
         escritor.writerow(["Fecha_Hora", "ID_Sesion", "Mensaje_Turista", "Respuesta_IA"])
 
 # 2. Configuración de IA y Base de Datos (RAG)
-ia = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.2)
+ia = ChatGoogleGenerativeAI(model="gemini-3.5-flash", temperature=0.2)
 motor_vectores = GoogleGenerativeAIEmbeddings(model="gemini-embedding-2-preview")
 CARPETA_BASE_DATOS = "./chroma_db"
 
