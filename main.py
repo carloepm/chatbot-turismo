@@ -3,6 +3,8 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import os
+import csv
+from datetime import datetime
 from dotenv import load_dotenv
 from pathlib import Path
 # --- TRUCO PARA RENDER Y CHROMADB ---
@@ -36,6 +38,17 @@ app = FastAPI(title="Turismo Chilecito Web")
 RUTA_BASE = Path(__file__).parent
 app.mount("/static", StaticFiles(directory=RUTA_BASE / "static"), name="static")
 ARCHIVO_HTML = RUTA_BASE / "index.html"
+
+# ---------------------------------------------------------
+# SISTEMA DE ANALÍTICA Y RECOLECCIÓN DE DATOS
+# ---------------------------------------------------------
+ARCHIVO_CSV = RUTA_BASE / "registro_consultas.csv"
+
+# Si el archivo no existe, lo creamos y escribimos las cabeceras
+if not ARCHIVO_CSV.exists():
+    with open(ARCHIVO_CSV, mode="w", newline="", encoding="utf-8") as archivo:
+        escritor = csv.writer(archivo)
+        escritor.writerow(["Fecha_Hora", "ID_Sesion", "Mensaje_Turista", "Respuesta_IA"])
 
 # 2. Configuración de IA y Base de Datos (RAG)
 ia = ChatGoogleGenerativeAI(model="gemini-3.5-flash", temperature=0.2)
@@ -114,9 +127,27 @@ async def procesar_chat(solicitud: SolicitudChat):
         )
         
         texto_ia = resultado.content if not isinstance(resultado.content, list) else resultado.content[0].get("text", "")
+        # D. Consultar a Gemini pasándole el ID de la sesión actual
+        resultado = motor_con_memoria.invoke(
+            [
+                SystemMessage(content=instruccion),
+                HumanMessage(content=solicitud.texto)
+            ],
+            config={"configurable": {"session_id": solicitud.id_sesion}}
+        )
+        
+        texto_ia = resultado.content if not isinstance(resultado.content, list) else resultado.content[0].get("text", "")
+        
+        # --- NUEVO: GUARDAR LA FILA EN EL DATASET ---
+        fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with open(ARCHIVO_CSV, mode="a", newline="", encoding="utf-8") as archivo:
+            escritor = csv.writer(archivo)
+            escritor.writerow([fecha_actual, solicitud.id_sesion, solicitud.texto, texto_ia])
+        # --------------------------------------------
         
         return RespuestaChat(respuesta_ia=texto_ia, status="exito")
-        
+
+                
     except Exception as e:
         print(f"\n❌ ERROR CRÍTICO: {str(e)}\n")
         raise HTTPException(status_code=500, detail=str(e))
