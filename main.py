@@ -55,7 +55,7 @@ if not ARCHIVO_CSV.exists():
         escritor.writerow(["Fecha_Hora", "ID_Sesion", "Mensaje_Turista", "Respuesta_IA"])
 
 # 2. Configuración de IA y Base de Datos (RAG)
-ia = ChatGoogleGenerativeAI(model="gemini-3.5-flash", temperature=0.2)
+ia = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.2)
 motor_vectores = GoogleGenerativeAIEmbeddings(model="gemini-embedding-2-preview")
 CARPETA_BASE_DATOS = "./chroma_db"
 
@@ -155,3 +155,17 @@ async def procesar_chat(solicitud: SolicitudChat):
     except Exception as e:
         print(f"\n❌ ERROR CRÍTICO: {str(e)}\n")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/bajar")
+async def descargar_registros():
+    """Ruta oculta para descargar el CSV de analíticas"""
+    if ARCHIVO_CSV.exists():
+        # Usamos FileResponse (que ya importamos arriba) para enviar el archivo
+        return FileResponse(
+            path=ARCHIVO_CSV, 
+            media_type="text/csv", 
+            filename="consultas_turistas.csv"
+        )
+    else:
+        return {"mensaje": "Todavía no hay datos guardados."}
