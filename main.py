@@ -42,7 +42,7 @@ ARCHIVO_HTML = RUTA_BASE / "index.html"
 # ---------------------------------------------------------
 # SISTEMA DE ANALÍTICA Y RECOLECCIÓN DE DATOS
 # ---------------------------------------------------------
-ARCHIVO_CSV = RUTA_BASE / "registro_consultas.csv"
+ARCHIVO_CSV = Path("documentos_turismo)") / "registro_consultas.csv"
 
 # Si el archivo no existe, lo creamos y escribimos las cabeceras
 if not ARCHIVO_CSV.exists():
@@ -108,7 +108,7 @@ async def procesar_chat(solicitud: SolicitudChat):
         2. CHARLA GENERAL Y CONTEXTO: Si te saluda o hace preguntas generales sobre turismo, usa tu conocimiento general.
         3. EL LÍMITE Y DERIVACIÓN: Nunca inventes precios, fechas ni nombres que no estén en los DATOS LOCALES. Si no tienes la información exacta, recomiéndale comunicarse con un asesor turístico.
         IMPORTANTE: Cuando le des el contacto, debes usar EXACTAMENTE este formato Markdown para que el número sea un botón clickeable: 
-        [+54 9 3825 00-0000](https://wa.me/5493825000000)
+        [+54 9 3825 67-5999](https://wa.me/5493825675999)
         """
         
         # C. Motor con Memoria Separada
