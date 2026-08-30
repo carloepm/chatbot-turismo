@@ -265,20 +265,23 @@
 
                 let datos = await respuesta.json();
                 
-                // 1. Buscamos el cartel de "Escribiendo" y lo borramos de forma segura
                 let cartelPensando = document.getElementById(idPensando);
                 if (cartelPensando) cartelPensando.remove();
                 
-                // 2. Intentamos traducir el formato, con plan de respaldo si falla
+                // --- AQUÍ ESTÁ LA MAGIA ---
+                // Buscamos el texto en todas las variables posibles que pueda estar enviando FastAPI
+                let textoIA = datos.respuesta_ia || datos.respuesta || datos.mensaje || datos.text || "Error al leer el texto de la IA.";
+                // --------------------------
+
                 let textoFormateado = "";
                 try {
                     if (typeof marked !== 'undefined') {
-                        textoFormateado = marked.parse(datos.respuesta_ia);
+                        textoFormateado = marked.parse(textoIA);
                     } else {
-                        textoFormateado = datos.respuesta_ia.replace(/\n/g, "<br>");
+                        textoFormateado = textoIA.replace(/\n/g, "<br>");
                     }
                 } catch (errorFormato) {
-                    textoFormateado = datos.respuesta_ia; // Si todo falla, muestra el texto crudo
+                    textoFormateado = textoIA; 
                 }
 
                 mensajes.innerHTML += `<div class="burbuja ia">${textoFormateado}</div>`;
@@ -287,7 +290,6 @@
                 let cartelPensando = document.getElementById(idPensando);
                 if (cartelPensando) cartelPensando.remove();
                 
-                // Ahora sí mostrará el error si se cae el internet
                 mensajes.innerHTML += `<div class="burbuja ia" style="color:#d32f2f;">Hubo un error de conexión: ${e.message}</div>`;
             }
 
