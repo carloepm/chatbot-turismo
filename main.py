@@ -45,10 +45,10 @@ ARCHIVO_HTML = RUTA_BASE / "index.html"
 ARCHIVO_CSV = Path("documentos_turismo)") / "registro_consultas.csv"
 
 # Si el archivo no existe, lo creamos y escribimos las cabeceras
-if not ARCHIVO_CSV.exists():
-    with open(ARCHIVO_CSV, mode="w", newline="", encoding="utf-8") as archivo:
-        escritor = csv.writer(archivo)
-        escritor.writerow(["Fecha_Hora", "ID_Sesion", "Mensaje_Turista", "Respuesta_IA"])
+#if not ARCHIVO_CSV.exists():
+#    with open(ARCHIVO_CSV, mode="w", newline="", encoding="utf-8") as archivo:
+#        escritor = csv.writer(archivo)
+#        escritor.writerow(["Fecha_Hora", "ID_Sesion", "Mensaje_Turista", "Respuesta_IA"])
 
 # 2. Configuración de IA y Base de Datos (RAG)
 ia = ChatGoogleGenerativeAI(model="gemini-3.5-flash", temperature=0.2)
