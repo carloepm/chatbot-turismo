@@ -214,29 +214,6 @@
     </div>
 
     <script>
-        const idSesionUnico = "turista_" + Math.random().toString(36).substring(2, 10);
-
-        // FUNCIÓN NUEVA: Alterna entre mostrar el botón o mostrar el chat
-        function toggleChat() {
-            const ventanaChat = document.getElementById('app-container');
-            const botonFlotante = document.getElementById('chat-fab');
-
-            if (ventanaChat.style.display === "none" || ventanaChat.style.display === "") {
-                // Abrir chat
-                ventanaChat.style.display = "flex";
-                botonFlotante.style.display = "none";
-            } else {
-                // Cerrar chat
-                ventanaChat.style.display = "none";
-                botonFlotante.style.display = "flex";
-            }
-        }
-
-        // Lógica de envío de mensajes (Se mantiene igual)
-        function manejarEnter(event) {
-            if (event.key === "Enter") enviar();
-        }
-
         async function enviar() {
             let input = document.getElementById("input-texto");
             let mensajes = document.getElementById("mensajes");
@@ -264,14 +241,31 @@
                 });
 
                 let datos = await respuesta.json();
-                document.getElementById(idPensando).remove();
                 
-                let textoFormateado = marked.parse(datos.respuesta_ia);
+                // 1. Buscamos el cartel de "Escribiendo" y lo borramos de forma segura
+                let cartelPensando = document.getElementById(idPensando);
+                if (cartelPensando) cartelPensando.remove();
+                
+                // 2. Intentamos traducir el formato, con plan de respaldo si falla
+                let textoFormateado = "";
+                try {
+                    if (typeof marked !== 'undefined') {
+                        textoFormateado = marked.parse(datos.respuesta_ia);
+                    } else {
+                        textoFormateado = datos.respuesta_ia.replace(/\n/g, "<br>");
+                    }
+                } catch (errorFormato) {
+                    textoFormateado = datos.respuesta_ia; // Si todo falla, muestra el texto crudo
+                }
+
                 mensajes.innerHTML += `<div class="burbuja ia">${textoFormateado}</div>`;
                 
             } catch (e) {
-                document.getElementById(idPensando).remove();
-                mensajes.innerHTML += `<div class="burbuja ia" style="color:#d32f2f;">Hubo un error de conexión.</div>`;
+                let cartelPensando = document.getElementById(idPensando);
+                if (cartelPensando) cartelPensando.remove();
+                
+                // Ahora sí mostrará el error si se cae el internet
+                mensajes.innerHTML += `<div class="burbuja ia" style="color:#d32f2f;">Hubo un error de conexión: ${e.message}</div>`;
             }
 
             input.disabled = false;
