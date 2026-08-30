@@ -42,7 +42,11 @@ ARCHIVO_HTML = RUTA_BASE / "index.html"
 # ---------------------------------------------------------
 # SISTEMA DE ANALÍTICA Y RECOLECCIÓN DE DATOS
 # ---------------------------------------------------------
-ARCHIVO_CSV = Path("documentos_turismo)") / "registro_consultas.csv"
+ARCHIVO_CSV = RUTA_BASE / "documentos_turismo" / "registro_consultas.csv" 
+
+# --- LÍNEA NUEVA: Crea la carpeta automáticamente si no existe ---
+ARCHIVO_CSV.parent.mkdir(parents=True, exist_ok=True)
+# ---------------------------------------------------------------
 
 # Si el archivo no existe, lo creamos y escribimos las cabeceras
 if not ARCHIVO_CSV.exists():
