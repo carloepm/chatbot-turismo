@@ -25,9 +25,17 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 # 1. Configuración de Entorno
 load_dotenv()
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-
-if not GOOGLE_API_KEY:
-    raise ValueError("¡Atención! No se encontró la GOOGLE_API_KEY en el archivo .env")
+# =================================================================
+# DETECTOR DE PROBLEMAS DE LLAVE
+# =================================================================
+print("\n" + "="*50)
+if GOOGLE_API_KEY is None:
+    print("❌ ALARMA: Python no está recibiendo ninguna llave. El valor es 'None'.")
+elif GOOGLE_API_KEY.strip() == "":
+    print("❌ ALARMA: Python detecta la variable, pero está completamente vacía.")
+else:
+    print(f"✅ Llave detectada correctamente. Tiene {len(GOOGLE_API_KEY)} caracteres y empieza con: {GOOGLE_API_KEY[:4]}")
+print("="*50 + "\n")
 
 app = FastAPI(title="Turismo Chilecito Web")
 
