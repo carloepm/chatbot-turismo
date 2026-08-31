@@ -2,7 +2,7 @@ import os
 import google.generativeai as genai
 
 # 1. Pon tu clave aquí
-API_KEY = "AQ.Ab8RN6Ia2hMJsr1vIaSI4aeIRs655rE-XRcwit_rPPWcXGTOGQ"
+API_KEY = "AQ.Ab8RN6Lp7xjkbRCJRt0F0it564J9R-h78S2-HTVIFpL96pnBow"
 genai.configure(api_key=API_KEY)
 
 print("Buscando modelos compatibles con tu cuenta...")
