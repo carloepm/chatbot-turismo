@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import os
 import csv
+import requests
 from datetime import datetime
 from dotenv import load_dotenv
 from pathlib import Path
@@ -33,6 +34,23 @@ if not api_key:
     raise ValueError("¡Atención! No se encontró la GOOGLE_API_KEY en el archivo .env")
 
 app = FastAPI(title="Turismo Chilecito Web")
+
+URL_GOOGLE_SHEETS = os.getenv("GOOGLE_SHEETS_WEBHOOK_URL")
+
+def guardar_en_sheets(fecha: str, id_sesion: str, pregunta: str, respuesta: str):
+    """Envía la interacción a Google Sheets de forma silenciosa"""
+    if not URL_GOOGLE_SHEETS:
+        return
+    try:
+        payload = {
+            "fecha_hora": fecha,
+            "id_sesion": id_sesion,
+            "mensaje_turista": pregunta,
+            "respuesta_ia": respuesta
+        }
+        requests.post(URL_GOOGLE_SHEETS, json=payload, timeout=5)
+    except Exception as error:
+        print(f"⚠️ No se pudo registrar en Google Sheets: {error}")
 
 # Permitir cargar imágenes locales desde la carpeta "static"
 RUTA_BASE = Path(__file__).parent
@@ -141,6 +159,10 @@ async def procesar_chat(solicitud: SolicitudChat):
         )
         
         texto_ia = resultado.content if not isinstance(resultado.content, list) else resultado.content[0].get("text", "")
+
+        # Guardar en Google Sheets en tiempo real
+        fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        guardar_en_sheets(fecha_actual, solicitud.id_sesion, solicitud.texto, texto_ia)
         
         # --- NUEVO: GUARDAR LA FILA EN EL DATASET ---
         fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
