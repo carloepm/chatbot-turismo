@@ -1,5 +1,5 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import os
@@ -13,10 +13,6 @@ __import__('pysqlite3')
 import sys
 sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 # ------------------------------------
-
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
-# ... (aquí sigue el resto de tu código normal)
 
 # Importaciones de LangChain
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
@@ -108,15 +104,24 @@ async def interfaz_web():
     return FileResponse(ARCHIVO_HTML)
 
 @app.post("/api/chat", response_model=RespuestaChat)
-async def procesar_chat(solicitud: SolicitudChat):
+async def procesar_chat(solicitud: SolicitudChat, request: Request):
+    ip_turista = request.headers.get("X-Forwarded-For")
+    if ip_turista:
+        ip_turista = ip_turista.split(",")[0].strip() # Tomar la primera IP si hay varias
+    else:
+        ip_turista = request.client.host # Respaldo por si se prueba en la computadora local
+        
+    id_memoria_ip = f"ip_{ip_turista}"
     try:
         print(f"\nTurista [{solicitud.id_sesion}] pregunta: {solicitud.texto}")
+
+        
         
         # A. RAG: Buscar en la base de datos
         documentos = buscador.invoke(solicitud.texto)
         contexto_local = "\n\n".join([doc.page_content for doc in documentos])
         
-      # B. RAG: Prompt Híbrido (Actualizado con enlace a WhatsApp)
+      # B. RAG: Prompt Híbrido 
         instruccion = f"""
         Eres un guía turístico experto de Chilecito, La Rioja, Argentina. Responde de forma cálida y útil.
         
@@ -145,7 +150,7 @@ async def procesar_chat(solicitud: SolicitudChat):
                 SystemMessage(content=instruccion),
                 HumanMessage(content=solicitud.texto)
             ],
-            config={"configurable": {"session_id": solicitud.id_sesion}}
+            config={"configurable": {"session_id": id_memoria_ip}}
         )
         
         texto_ia = resultado.content if not isinstance(resultado.content, list) else resultado.content[0].get("text", "")
