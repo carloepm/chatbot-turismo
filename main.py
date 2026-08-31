@@ -24,9 +24,9 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 
 # 1. Configuración de Entorno
 load_dotenv()
-api_key = os.getenv("GOOGLE_API_KEY")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
-if not api_key:
+if not GOOGLE_API_KEY:
     raise ValueError("¡Atención! No se encontró la GOOGLE_API_KEY en el archivo .env")
 
 app = FastAPI(title="Turismo Chilecito Web")
@@ -69,7 +69,15 @@ if not ARCHIVO_CSV.exists():
         escritor.writerow(["Fecha_Hora", "ID_Sesion", "Mensaje_Turista", "Respuesta_IA"])
 
 # 2. Configuración de IA y Base de Datos (RAG)
-ia = ChatGoogleGenerativeAI(model="gemini-3.5-flash", temperature=0.2)
+embeddings = GoogleGenerativeAIEmbeddings(
+    model="models/embedding-001",
+    google_api_key=GOOGLE_API_KEY
+)
+ia = ChatGoogleGenerativeAI(
+    model="gemini-3.5-flash", 
+    temperature=0.2,
+    google_api_key=GOOGLE_API_KEY
+)
 motor_vectores = GoogleGenerativeAIEmbeddings(model="gemini-embedding-2-preview")
 CARPETA_BASE_DATOS = "./chroma_db"
 
